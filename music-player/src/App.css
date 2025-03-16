@@ -1,0 +1,42 @@
+.app-container {
+  text-align: center;
+  font-family: Arial, sans-serif;
+  padding: 20px;
+}
+
+.search-form {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.search-form input {
+  padding: 10px;
+  font-size: 16px;
+  width: 300px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.search-form button {
+  padding: 10px 15px;
+  margin-left: 10px;
+  background-color: #ff4500;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.search-form button:disabled {
+  background-color: gray;
+  cursor: not-allowed;
+}
+
+.video-container, .audio-container {
+  margin-top: 20px;
+}
+
+.error {
+  color: red;
+}
