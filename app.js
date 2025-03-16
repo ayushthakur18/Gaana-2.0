@@ -5,7 +5,7 @@ const cors = require("cors");
 const app = express();
 app.use(cors()); // Allow frontend to access backend
 const PORT = 5000;
-const JAMENDO_CLIENT_ID = "515fa03c"; // Replace with your API key
+const JAMENDO_CLIENT_ID = ""; // Replace with your API key
 
 // secret - a467b6cc1c614a7bbbe7ffe5ed0d079d
 
