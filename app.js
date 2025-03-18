@@ -7,7 +7,9 @@ const { exec } = require("child_process");
 require("dotenv").config();
 
 const app = express();
-app.use(cors({ origin: "*" }));
+app.use(cors({
+    origin: "https://ayushthakur18.github.io/Gaana-2.0/"
+}));
 
 const YT_API_KEY = process.env.YT_API_KEY;
 const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
