@@ -1,53 +1,68 @@
-require("dotenv").config();
 const express = require("express");
 const axios = require("axios");
+const cors = require("cors");
+const path = require('path');
+const fs = require('fs')
 const { exec } = require("child_process");
-const path = require("path");
+require("dotenv").config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+app.use(cors());
 
-// Load API keys from .env
+const PORT = 5000;
 const YT_API_KEY = process.env.YT_API_KEY;
 const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
 const JAMENDO_CLIENT_ID = process.env.JAMENDO_CLIENT_ID;
 
-// ✅ 1️⃣ YouTube Search
+// Ensure "audio" directory exists
+const AUDIO_DIR = path.join(__dirname, "audio");
+if (!fs.existsSync(AUDIO_DIR)) fs.mkdirSync(AUDIO_DIR);
+
+// Function to execute shell commands with a promise
+const runCommand = (command) => {
+    return new Promise((resolve, reject) => {
+        exec(command, (error, stdout, stderr) => {
+            if (error) reject(stderr || error);
+            else resolve(stdout);
+        });
+    });
+};
+
+// 1️⃣ YouTube Search & Audio Extraction
 app.get("/search/youtube", async (req, res) => {
     const query = req.query.q;
-    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${query}&key=${YT_API_KEY}&maxResults=5`;
+    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${query}&key=${YT_API_KEY}&maxResults=1`;
 
     try {
         const { data } = await axios.get(url);
-        res.json(data.items.map(item => ({
-            source: "YouTube",
-            title: item.snippet.title,
-            videoId: item.id.videoId,
-            url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
-        })));
+        if (!data.items.length) return res.status(404).json({ error: "No results found" });
+
+        const videoId = data.items[0].id.videoId;
+        const title = data.items[0].snippet.title;
+        const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+        const audioFile = path.join(AUDIO_DIR, `${videoId}.mp3`);
+
+        // If audio already exists, return it
+        if (fs.existsSync(audioFile)) {
+            return res.json({ source: "YouTube", title, audioUrl: `http://localhost:${PORT}/audio/${videoId}.mp3` });
+        }
+
+        // Extract audio using yt-dlp
+        const command = `yt-dlp -x --audio-format mp3 "${videoUrl}" -o "${AUDIO_DIR}/%(id)s.%(ext)s"`;
+        await runCommand(command);
+
+        res.json({ source: "YouTube", title, audioUrl: `http://localhost:${PORT}/audio/${videoId}.mp3` });
+
     } catch (error) {
-        res.status(500).json({ error: "YouTube API error" });
+        res.status(500).json({ error: "YouTube API error", details: error.toString() });
     }
 });
 
-// ✅ Extract Audio from YouTube Video
-app.get("/extract-audio", (req, res) => {
-    const videoUrl = req.query.url;
-    if (!videoUrl) return res.status(400).json({ error: "Missing video URL" });
+// Serve audio files
+app.use("/audio", express.static(AUDIO_DIR));
 
-    const outputFile = path.join(__dirname, "public/audio.mp3");
-    const command = `yt-dlp -x --audio-format mp3 "${videoUrl}" -o "${outputFile}"`;
-
-    exec(command, (error, stdout, stderr) => {
-        if (error) return res.status(500).json({ error: stderr });
-
-        // ✅ Serve extracted audio
-        res.json({ message: "Audio extracted successfully!", audioUrl: `http://localhost:${PORT}/audio.mp3` });
-    });
-});
-
-// ✅ 2️⃣ Jamendo Search
+// 2️⃣ Jamendo Search
 app.get("/search/jamendo", async (req, res) => {
     const query = req.query.q;
     const url = `https://api.jamendo.com/v3.0/tracks/?client_id=${JAMENDO_CLIENT_ID}&format=json&limit=5&namesearch=${query}`;
@@ -65,7 +80,7 @@ app.get("/search/jamendo", async (req, res) => {
     }
 });
 
-// ✅ 3️⃣ Spotify Search (OAuth Required)
+// 3️⃣ Spotify Search (OAuth Required)
 app.get("/search/spotify", async (req, res) => {
     const query = req.query.q;
 
@@ -101,21 +116,23 @@ app.get("/search/spotify", async (req, res) => {
     }
 });
 
-// ✅ 4️⃣ Combined Search API
+// Combined Search API
 app.get("/search", async (req, res) => {
     const query = req.query.q;
     try {
-        const [yt, jamendo, spotify] = await Promise.all([
-            axios.get(`http://localhost:${PORT}/search/youtube?q=${query}`),
-            axios.get(`http://localhost:${PORT}/search/jamendo?q=${query}`),
-            axios.get(`http://localhost:${PORT}/search/spotify?q=${query}`)
+        const [yt] = await Promise.all([
+            axios.get(`http://localhost:5000/search/youtube?q=${query}`),
+            // axios.get(`http://localhost:5000/search/jamendo?q=${query}`),
+            // axios.get(`http://localhost:5000/search/spotify?q=${query}`)
         ]);
 
-        res.json([...yt.data, ...jamendo.data, ...spotify.data]);
+        console.log('sent', yt.data);
+        
+
+        res.json([yt.data]); // , ...jamendo.data, ...spotify.data
     } catch (error) {
         res.status(500).json({ error: "Error fetching songs" });
     }
 });
 
-// ✅ Start Server
 app.listen(PORT, () => console.log(`🎶 Server running on http://localhost:${PORT}`));
