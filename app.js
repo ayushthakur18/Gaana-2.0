@@ -7,7 +7,8 @@ const { exec } = require("child_process");
 require("dotenv").config();
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: "*" }));
+
 const YT_API_KEY = process.env.YT_API_KEY;
 const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
@@ -131,6 +132,11 @@ app.get("/search", async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: "Error fetching songs" });
     }
+});
+
+app.use((req, res, next) => {
+    console.log(`404 Error: Route ${req.originalUrl} not found`);
+    res.status(404).json({ error: "Route not found" });
 });
 
 const PORT = process.env.PORT || 5000;  // Render sets PORT dynamically
