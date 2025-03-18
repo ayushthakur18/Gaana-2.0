@@ -11,6 +11,19 @@ app.use(cors({
     origin: "https://ayushthakur18.github.io/Gaana-2.0/"
 }));
 
+app.use(cors({
+    origin: "*",  // Allow all origins (for testing)
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    allowedHeaders: "Content-Type,Authorization"
+}));
+
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");  // Allow all origins
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    next();
+});
+
 const YT_API_KEY = process.env.YT_API_KEY;
 const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
