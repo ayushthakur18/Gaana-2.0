@@ -8,8 +8,6 @@ require("dotenv").config();
 
 const app = express();
 app.use(cors());
-
-const PORT = 5000;
 const YT_API_KEY = process.env.YT_API_KEY;
 const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
@@ -135,4 +133,8 @@ app.get("/search", async (req, res) => {
     }
 });
 
-app.listen(PORT, () => console.log(`🎶 Server running on http://localhost:${PORT}`));
+const PORT = process.env.PORT || 5000;  // Render sets PORT dynamically
+
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`🎶 Server running on port ${PORT}`);
+});
