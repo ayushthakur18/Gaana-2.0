@@ -14,7 +14,7 @@ function App() {
             setError(null);
             console.log("Fetching songs...");
 
-            const response = await axios.get(`https://gaana-2-0.onrender.com/search?q=${query}`);
+            const response = await axios.get(`https://my-music-tf55.onrender.com/search?q=${query}`);
             
             if (response.data && Array.isArray(response.data)) {
                 setSongs(response.data);
