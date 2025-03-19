@@ -145,7 +145,7 @@ app.get("/search", async (req, res) => {
 
         res.json([yt.data]); // , ...jamendo.data, ...spotify.data
     } catch (error) {
-        res.status(500).json({ error: "Error fetching songs" });
+        res.status(500).json({ error: "Error fetching songs", errorCode: JSON.stringify(error) });
     }
 });
 
