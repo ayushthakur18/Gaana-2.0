@@ -43,7 +43,8 @@ const runCommand = (command) => {
 };
 
 app.get('/logs', async (req, res) => {
-    res.send(logs[logs.length - 1]);
+    res.send(logs);
+    logs = [];
 })
 
 // 1️⃣ YouTube Search & Audio Extraction
@@ -163,8 +164,6 @@ app.get("/search", async (req, res) => {
         res.json([yt.data]); // , ...jamendo.data, ...spotify.data
     } catch (error) {
         res.status(500).json({ error: "Error fetching songs", errorCode: JSON.stringify(error) });
-    }finally {
-        logs = [];
     }
 });
 
