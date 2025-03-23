@@ -151,7 +151,7 @@ app.get("/search", async (req, res) => {
     const query = req.query.q;
     logs.push(`Got a request for query ${query}`);
     try {
-        const y = await yt(req, res);
+        const y = await yt(query);
         if (y?.error) {
             res.status(400).json(y);
         }
