@@ -1,71 +1,71 @@
 import React, { useState } from "react";
 import axios from "axios";
+import "./App.css";
 
-function App() {
-    const [query, setQuery] = useState("");
-    const [songs, setSongs] = useState([]);
-    const [error, setError] = useState(null);
+const App = () => {
+  const [query, setQuery] = useState("");
+  const [songs, setSongs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-    // 🔍 Function to search music across all platforms
-    const searchMusic = async () => {
-        if (!query.trim()) return; // Ignore empty queries
+  const searchMusic = async () => {
+    if (!query.trim()) return;
+    
+    setLoading(true);
+    setError("");
+    setSongs([]);
 
-        try {
-            setError(null);
-            console.log("Fetching songs...");
+    try {
+      const { data } = await axios.get(`https://your-backend-url.com/search?q=${query}`);
+      setSongs(data);
+    } catch (err) {
+      setError("Failed to fetch music. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            const response = await axios.get(`https://my-music-tf55.onrender.com/search?q=${query}`);
-            
-            if (response.data && Array.isArray(response.data)) {
-                setSongs(response.data);
-                console.log("Songs received:", response.data);
-            } else {
-                throw new Error("Invalid response format");
-            }
-        } catch (err) {
-            console.error("Error fetching music:", err);
-            setError("Error fetching music. Please try again.");
-            setSongs([]); // Ensure previous results are cleared
-        }
-    };
+  return (
+    <div className="app-container">
+      <h1>🎵 Music Finder</h1>
+      
+      <div className="search-container">
+        <input
+          type="text"
+          placeholder="Search for a song..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        <button onClick={searchMusic}>Search</button>
+      </div>
 
-    return (
-        <div style={{ textAlign: "center", padding: "20px" }}>
-            <h1>🎵 Multi-Source Music Player</h1>
-            <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search for a song..."
-                style={{ padding: "10px", width: "300px" }}
-            />
-            <button onClick={searchMusic} style={{ padding: "10px 20px", marginLeft: "10px" }}>
-                Search
-            </button>
+      {loading && <p>Loading music...</p>}
+      {error && <p className="error">{error}</p>}
 
-            {error && <p style={{ color: "red" }}>{error}</p>}
-
-            <div style={{ marginTop: "20px" }}>
-                {songs.length === 0 && !error && <p>No results found.</p>}
-
-                {songs.map((song, index) => (
-                    <div key={index} style={{ marginBottom: "15px", borderBottom: "1px solid #ccc", paddingBottom: "10px" }}>
-                        <p><strong>{song.title}</strong> ({song.source})</p>
-
-                        {/* 🎧 If audioUrl exists, show audio player */}
-                        {song.audioUrl ? (
-                            <audio controls>
-                                <source src={song.audioUrl} type="audio/mp3" />
-                                Your browser does not support the audio tag.
-                            </audio>
-                        ) : (
-                            <a href={song.url} target="_blank" rel="noopener noreferrer">🎧 Listen</a>
-                        )}
-                    </div>
-                ))}
+      <div className="results">
+        {songs.length > 0 ? (
+          songs.map((song, index) => (
+            <div key={index} className="song-card">
+              <h3>{song.title}</h3>
+              <p>Source: {song.source}</p>
+              {song.audioUrl ? (
+                <audio controls>
+                  <source src={song.audioUrl} type="audio/mp3" />
+                  Your browser does not support the audio element.
+                </audio>
+              ) : (
+                <a href={song.url} target="_blank" rel="noopener noreferrer">
+                  Listen Here
+                </a>
+              )}
             </div>
-        </div>
-    );
-}
+          ))
+        ) : (
+          !loading && <p>No results found.</p>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default App;

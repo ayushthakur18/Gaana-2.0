@@ -1,40 +1,72 @@
-.app-container {
+body {
+  font-family: "Arial", sans-serif;
+  background: #121212;
+  color: white;
   text-align: center;
-  font-family: Arial, sans-serif;
-  padding: 20px;
+  margin: 0;
+  padding: 0;
 }
 
-.search-form {
-  display: flex;
-  justify-content: center;
+.app-container {
+  max-width: 600px;
+  margin: 50px auto;
+  padding: 20px;
+  border-radius: 10px;
+  background: #1e1e1e;
+  box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.2);
+}
+
+h1 {
+  font-size: 24px;
   margin-bottom: 20px;
 }
 
-.search-form input {
-  padding: 10px;
-  font-size: 16px;
-  width: 300px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
+.search-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
 }
 
-.search-form button {
-  padding: 10px 15px;
-  margin-left: 10px;
-  background-color: #ff4500;
-  color: white;
+input {
+  padding: 10px;
+  width: 70%;
   border: none;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+button {
+  padding: 10px 15px;
+  border: none;
+  background: #ff4500;
+  color: white;
+  font-size: 16px;
   border-radius: 5px;
   cursor: pointer;
 }
 
-.search-form button:disabled {
-  background-color: gray;
-  cursor: not-allowed;
+button:hover {
+  background: #ff6347;
 }
 
-.video-container, .audio-container {
+.results {
   margin-top: 20px;
+}
+
+.song-card {
+  background: #333;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 8px;
+}
+
+.song-card h3 {
+  margin: 5px 0;
+}
+
+.song-card audio {
+  width: 100%;
+  margin-top: 5px;
 }
 
 .error {
