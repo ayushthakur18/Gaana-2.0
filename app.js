@@ -30,6 +30,11 @@ const JAMENDO_CLIENT_ID = process.env.JAMENDO_CLIENT_ID;
 const AUDIO_DIR = path.join(__dirname, "audio");
 if (!fs.existsSync(AUDIO_DIR)) fs.mkdirSync(AUDIO_DIR);
 
+const YT_DLP_PATH = path.join(__dirname, "yt-dlp");
+const FFMPEG_PATH = path.join(__dirname, "ffmpeg", "ffmpeg");
+
+// Define the command
+
 let logs = [];
 
 // Function to execute shell commands with a promise
@@ -74,7 +79,8 @@ const yt = async (query) => {
         logs.push('Converting video to audio');
         // Extract audio using yt-dlp
         try {
-            const command = `yt-dlp -x --audio-format mp3 "${videoUrl}" -o "${AUDIO_DIR}/%(id)s.%(ext)s"`;
+            // const command = `yt-dlp -x --audio-format mp3 "${videoUrl}" -o "${AUDIO_DIR}/%(id)s.%(ext)s"`;
+            const command = `${YT_DLP_PATH} -x --audio-format mp3 --ffmpeg-location ${FFMPEG_PATH} "${videoUrl}" -o "${AUDIO_DIR}/%(id)s.%(ext)s"`;
             await runCommand(command);
             logs.push(`Well something happened successully ${`https://my-music-tf55.onrender.com/audio/${videoId}.mp3`}`);
             return { source: "YouTube", title, audioUrl: `https://my-music-tf55.onrender.com/audio/${videoId}.mp3` };
