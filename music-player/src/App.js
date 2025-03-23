@@ -16,7 +16,7 @@ const App = () => {
     setSongs([]);
 
     try {
-      const { data } = await axios.get(`https://your-backend-url.com/search?q=${query}`);
+      const { data } = await axios.get(`https://my-music-tf55.onrender.com/search?q=${query}`);
       setSongs(data);
     } catch (err) {
       setError("Failed to fetch music. Try again.");
