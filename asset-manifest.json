@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/Gaana-2.0/static/css/main.e6c13ad2.css",
-    "main.js": "/Gaana-2.0/static/js/main.0119a80f.js",
+    "main.css": "/Gaana-2.0/static/css/main.ad6f68ce.css",
+    "main.js": "/Gaana-2.0/static/js/main.021f95a8.js",
     "static/js/453.21f478df.chunk.js": "/Gaana-2.0/static/js/453.21f478df.chunk.js",
     "index.html": "/Gaana-2.0/index.html",
-    "main.e6c13ad2.css.map": "/Gaana-2.0/static/css/main.e6c13ad2.css.map",
-    "main.0119a80f.js.map": "/Gaana-2.0/static/js/main.0119a80f.js.map",
+    "main.ad6f68ce.css.map": "/Gaana-2.0/static/css/main.ad6f68ce.css.map",
+    "main.021f95a8.js.map": "/Gaana-2.0/static/js/main.021f95a8.js.map",
     "453.21f478df.chunk.js.map": "/Gaana-2.0/static/js/453.21f478df.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.e6c13ad2.css",
-    "static/js/main.0119a80f.js"
+    "static/css/main.ad6f68ce.css",
+    "static/js/main.021f95a8.js"
   ]
 }
