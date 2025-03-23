@@ -22,6 +22,7 @@ app.use((req, res, next) => {
 });
 
 const YT_API_KEY = process.env.YT_API_KEY;
+const YT_DLP_PATH = "/opt/render/project/.cache/bin/yt-dlp";
 // const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 // const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
 // const JAMENDO_CLIENT_ID = process.env.JAMENDO_CLIENT_ID;
@@ -80,14 +81,14 @@ const yt = async (query) => {
         // Extract audio using yt-dlp
         try {
             // const command = `yt-dlp -x --audio-format mp3 "${videoUrl}" -o "${AUDIO_DIR}/%(id)s.%(ext)s"`;
-            // const command = `${YT_DLP_PATH} -x --audio-format mp3 --ffmpeg-location ${FFMPEG_PATH} "${videoUrl}" -o "${AUDIO_DIR}/%(id)s.%(ext)s"`;
-            const command = `yt-dlp -x --audio-format mp3 "${videoUrl}" -o "${AUDIO_DIR}/%(id)s.%(ext)s"`;
+            const command = `${YT_DLP_PATH} -x --audio-format mp3 "${videoUrl}" -o "${AUDIO_DIR}/%(id)s.%(ext)s"`;
             await runCommand(command);
             logs.push(`Well something happened successully ${`https://my-music-tf55.onrender.com/audio/${videoId}.mp3`}`);
             return { source: "YouTube", title, audioUrl: `https://my-music-tf55.onrender.com/audio/${videoId}.mp3` };
         } catch (e) {
             logs.push('Problems occured at the time of conversion');
             logs.push(JSON.stringify(e));
+            return {error: JSON.stringify(e)}
         }
 
     } catch (error) {
