@@ -48,7 +48,7 @@ app.get('/logs', async (req, res) => {
 })
 
 // 1️⃣ YouTube Search & Audio Extraction
-app.get("/search/youtube", async (req, res) => {
+const yt = async (req, res) => {
     const query = req.query.q;
     logs.push(`${query} came in yt channel`);
     const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${query}&key=${YT_API_KEY}&maxResults=1`;
@@ -69,7 +69,7 @@ app.get("/search/youtube", async (req, res) => {
         // If audio already exists, return it
         if (fs.existsSync(audioFile)) {
             logs.push('Got the audio file from cache');
-            return res.json({ source: "YouTube", title, audioUrl: `http://localhost:${PORT}/audio/${videoId}.mp3` });
+            return res.json({ source: "YouTube", title, audioUrl: `https://my-music-tf55.onrender.com/audio/${videoId}.mp3` });
         }
 
         logs.push('Converting video to audio');
@@ -77,8 +77,8 @@ app.get("/search/youtube", async (req, res) => {
         try {
             const command = `yt-dlp -x --audio-format mp3 "${videoUrl}" -o "${AUDIO_DIR}/%(id)s.%(ext)s"`;
             await runCommand(command);
-            logs.push(`Well something happened successully ${`http://localhost:${PORT}/audio/${videoId}.mp3`}`);
-            res.json({ source: "YouTube", title, audioUrl: `http://localhost:${PORT}/audio/${videoId}.mp3` });
+            logs.push(`Well something happened successully ${`https://my-music-tf55.onrender.com/audio/${videoId}.mp3`}`);
+            res.json({ source: "YouTube", title, audioUrl: `https://my-music-tf55.onrender.com/audio/${videoId}.mp3` });
         }catch (e) {
             logs.push('Problems occured at the time of conversion');
             logs.push(JSON.stringify(e));
@@ -88,80 +88,73 @@ app.get("/search/youtube", async (req, res) => {
         logs.push(`Well something occured at the top error handler of yt ${JSON.stringify(error)}`);
         res.status(500).json({ error: "YouTube API error", details: error.toString() });
     }
-});
+};
 
 // Serve audio files
 app.use("/audio", express.static(AUDIO_DIR));
 
 // 2️⃣ Jamendo Search
-app.get("/search/jamendo", async (req, res) => {
-    const query = req.query.q;
-    const url = `https://api.jamendo.com/v3.0/tracks/?client_id=${JAMENDO_CLIENT_ID}&format=json&limit=5&namesearch=${query}`;
+// app.get("/search/jamendo", async (req, res) => {
+//     const query = req.query.q;
+//     const url = `https://api.jamendo.com/v3.0/tracks/?client_id=${JAMENDO_CLIENT_ID}&format=json&limit=5&namesearch=${query}`;
 
-    try {
-        const { data } = await axios.get(url);
-        res.json(data.results.map(track => ({
-            source: "Jamendo",
-            title: track.name,
-            artist: track.artist_name,
-            url: track.audio,
-        })));
-    } catch (error) {
-        res.status(500).json({ error: "Jamendo API error" });
-    }
-});
+//     try {
+//         const { data } = await axios.get(url);
+//         res.json(data.results.map(track => ({
+//             source: "Jamendo",
+//             title: track.name,
+//             artist: track.artist_name,
+//             url: track.audio,
+//         })));
+//     } catch (error) {
+//         res.status(500).json({ error: "Jamendo API error" });
+//     }
+// });
 
-// 3️⃣ Spotify Search (OAuth Required)
-app.get("/search/spotify", async (req, res) => {
-    const query = req.query.q;
+// // 3️⃣ Spotify Search (OAuth Required)
+// app.get("/search/spotify", async (req, res) => {
+//     const query = req.query.q;
 
-    try {
-        // Get Spotify Access Token
-        const authResponse = await axios.post(
-            "https://accounts.spotify.com/api/token",
-            "grant_type=client_credentials",
-            {
-                headers: {
-                    Authorization: `Basic ${Buffer.from(SPOTIFY_CLIENT_ID + ":" + SPOTIFY_CLIENT_SECRET).toString("base64")}`,
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-            }
-        );
+//     try {
+//         // Get Spotify Access Token
+//         const authResponse = await axios.post(
+//             "https://accounts.spotify.com/api/token",
+//             "grant_type=client_credentials",
+//             {
+//                 headers: {
+//                     Authorization: `Basic ${Buffer.from(SPOTIFY_CLIENT_ID + ":" + SPOTIFY_CLIENT_SECRET).toString("base64")}`,
+//                     "Content-Type": "application/x-www-form-urlencoded",
+//                 },
+//             }
+//         );
 
-        const accessToken = authResponse.data.access_token;
+//         const accessToken = authResponse.data.access_token;
 
-        // Search for Song
-        const url = `https://api.spotify.com/v1/search?q=${query}&type=track&limit=5`;
-        const { data } = await axios.get(url, {
-            headers: { Authorization: `Bearer ${accessToken}` },
-        });
+//         // Search for Song
+//         const url = `https://api.spotify.com/v1/search?q=${query}&type=track&limit=5`;
+//         const { data } = await axios.get(url, {
+//             headers: { Authorization: `Bearer ${accessToken}` },
+//         });
 
-        res.json(data.tracks.items.map(track => ({
-            source: "Spotify",
-            title: track.name,
-            artist: track.artists[0].name,
-            url: track.external_urls.spotify,
-        })));
-    } catch (error) {
-        res.status(500).json({ error: "Spotify API error" });
-    }
-});
+//         res.json(data.tracks.items.map(track => ({
+//             source: "Spotify",
+//             title: track.name,
+//             artist: track.artists[0].name,
+//             url: track.external_urls.spotify,
+//         })));
+//     } catch (error) {
+//         res.status(500).json({ error: "Spotify API error" });
+//     }
+// });
 
 // Combined Search API
 app.get("/search", async (req, res) => {
     const query = req.query.q;
     logs.push(`Got a request for query ${query}`);
     try {
-        const [yt] = await Promise.all([
-            axios.get(`http://localhost:5000/search/youtube?q=${query}`),
-            // axios.get(`http://localhost:5000/search/jamendo?q=${query}`),
-            // axios.get(`http://localhost:5000/search/spotify?q=${query}`)
-        ]);
-
-        console.log('sent', yt.data);
-        
-
-        res.json([yt.data]); // , ...jamendo.data, ...spotify.data
+        const yt = await yt(req, res);
+        logs.push('sent the response back to server');
+        res.json([yt.data]);
     } catch (error) {
         res.status(500).json({ error: "Error fetching songs", errorCode: JSON.stringify(error) });
     }
