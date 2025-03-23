@@ -7,9 +7,6 @@ const { exec } = require("child_process");
 require("dotenv").config();
 
 const app = express();
-// app.use(cors({
-//     origin: "https://ayushthakur18.github.io/Gaana-2.0/"
-// }));
 
 app.use(cors({
     origin: "*", // Allow all origins
@@ -33,6 +30,8 @@ const JAMENDO_CLIENT_ID = process.env.JAMENDO_CLIENT_ID;
 const AUDIO_DIR = path.join(__dirname, "audio");
 if (!fs.existsSync(AUDIO_DIR)) fs.mkdirSync(AUDIO_DIR);
 
+let logs = [];
+
 // Function to execute shell commands with a promise
 const runCommand = (command) => {
     return new Promise((resolve, reject) => {
@@ -43,32 +42,49 @@ const runCommand = (command) => {
     });
 };
 
+app.get('/logs', async (req, res) => {
+    res.send(logs[logs.length - 1]);
+})
+
 // 1️⃣ YouTube Search & Audio Extraction
 app.get("/search/youtube", async (req, res) => {
     const query = req.query.q;
+    logs.push(`${query} came in yt channel`);
     const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${query}&key=${YT_API_KEY}&maxResults=1`;
 
     try {
         const { data } = await axios.get(url);
-        if (!data.items.length) return res.status(404).json({ error: "No results found" });
+        if (!data.items.length) {
+            logs.push('Couldnt get yt data');
+            return res.status(404).json({ error: "No results found" });
+        }
 
         const videoId = data.items[0].id.videoId;
         const title = data.items[0].snippet.title;
         const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
         const audioFile = path.join(AUDIO_DIR, `${videoId}.mp3`);
+        logs.push(`Successful search now trying to find file: ${audioFile}`);
 
         // If audio already exists, return it
         if (fs.existsSync(audioFile)) {
+            logs.push('Got the audio file from cache');
             return res.json({ source: "YouTube", title, audioUrl: `http://localhost:${PORT}/audio/${videoId}.mp3` });
         }
 
+        logs.push('Converting video to audio');
         // Extract audio using yt-dlp
-        const command = `yt-dlp -x --audio-format mp3 "${videoUrl}" -o "${AUDIO_DIR}/%(id)s.%(ext)s"`;
-        await runCommand(command);
-
-        res.json({ source: "YouTube", title, audioUrl: `http://localhost:${PORT}/audio/${videoId}.mp3` });
+        try {
+            const command = `yt-dlp -x --audio-format mp3 "${videoUrl}" -o "${AUDIO_DIR}/%(id)s.%(ext)s"`;
+            await runCommand(command);
+            logs.push(`Well something happened successully ${`http://localhost:${PORT}/audio/${videoId}.mp3`}`);
+            res.json({ source: "YouTube", title, audioUrl: `http://localhost:${PORT}/audio/${videoId}.mp3` });
+        }catch (e) {
+            logs.push('Problems occured at the time of conversion');
+            logs.push(JSON.stringify(e));
+        }
 
     } catch (error) {
+        logs.push(`Well something occured at the top error handler of yt ${JSON.stringify(error)}`);
         res.status(500).json({ error: "YouTube API error", details: error.toString() });
     }
 });
@@ -133,6 +149,7 @@ app.get("/search/spotify", async (req, res) => {
 // Combined Search API
 app.get("/search", async (req, res) => {
     const query = req.query.q;
+    logs.push(`Got a request for query ${query}`);
     try {
         const [yt] = await Promise.all([
             axios.get(`http://localhost:5000/search/youtube?q=${query}`),
@@ -146,6 +163,8 @@ app.get("/search", async (req, res) => {
         res.json([yt.data]); // , ...jamendo.data, ...spotify.data
     } catch (error) {
         res.status(500).json({ error: "Error fetching songs", errorCode: JSON.stringify(error) });
+    }finally {
+        logs = [];
     }
 });
 
