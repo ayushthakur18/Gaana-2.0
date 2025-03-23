@@ -23,22 +23,12 @@ app.use((req, res, next) => {
 
 const YT_API_KEY = process.env.YT_API_KEY;
 const YT_DLP_PATH = "/opt/render/project/.cache/bin/yt-dlp";
-// const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
-// const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
-// const JAMENDO_CLIENT_ID = process.env.JAMENDO_CLIENT_ID;
 
-// Ensure "audio" directory exists
 const AUDIO_DIR = path.join(__dirname, "audio");
 if (!fs.existsSync(AUDIO_DIR)) fs.mkdirSync(AUDIO_DIR);
 
-// const YT_DLP_PATH = path.join(__dirname, "yt-dlp");
-// const FFMPEG_PATH = path.join(__dirname, "ffmpeg", "ffmpeg");
-
-// Define the command
-
 let logs = [];
 
-// Function to execute shell commands with a promise
 const runCommand = (command) => {
     return new Promise((resolve, reject) => {
         exec(command, (error, stdout, stderr) => {
@@ -51,9 +41,25 @@ const runCommand = (command) => {
 app.get('/logs', async (req, res) => {
     res.send(logs);
     logs = [];
-})
+});
 
-// 1️⃣ YouTube Search & Audio Extraction
+app.use("/audio", express.static(AUDIO_DIR));
+
+app.get("/search", async (req, res) => {
+    const query = req.query.q;
+    logs.push(`Got a request for query ${query}`);
+    try {
+        const y = await yt(query);
+        if (y?.error) {
+            res.status(400).json(y);
+        }
+
+        logs.push('sent the response back to server');
+        res.json([y]);
+    } catch (error) {
+        res.status(500).json({ error: "Error fetching songs", errorCode: JSON.stringify(error) });
+    }
+});
 const yt = async (query) => {
     logs.push(`${query} came in yt channel`);
     const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${query}&key=${YT_API_KEY}&maxResults=1`;
@@ -88,7 +94,7 @@ const yt = async (query) => {
         } catch (e) {
             logs.push('Problems occured at the time of conversion');
             logs.push(JSON.stringify(e));
-            return {error: JSON.stringify(e)}
+            return { error: JSON.stringify(e) }
         }
 
     } catch (error) {
@@ -97,81 +103,7 @@ const yt = async (query) => {
     }
 };
 
-// Serve audio files
-app.use("/audio", express.static(AUDIO_DIR));
-
-// 2️⃣ Jamendo Search
-// app.get("/search/jamendo", async (req, res) => {
-//     const query = req.query.q;
-//     const url = `https://api.jamendo.com/v3.0/tracks/?client_id=${JAMENDO_CLIENT_ID}&format=json&limit=5&namesearch=${query}`;
-
-//     try {
-//         const { data } = await axios.get(url);
-//         res.json(data.results.map(track => ({
-//             source: "Jamendo",
-//             title: track.name,
-//             artist: track.artist_name,
-//             url: track.audio,
-//         })));
-//     } catch (error) {
-//         res.status(500).json({ error: "Jamendo API error" });
-//     }
-// });
-
-// // 3️⃣ Spotify Search (OAuth Required)
-// app.get("/search/spotify", async (req, res) => {
-//     const query = req.query.q;
-
-//     try {
-//         // Get Spotify Access Token
-//         const authResponse = await axios.post(
-//             "https://accounts.spotify.com/api/token",
-//             "grant_type=client_credentials",
-//             {
-//                 headers: {
-//                     Authorization: `Basic ${Buffer.from(SPOTIFY_CLIENT_ID + ":" + SPOTIFY_CLIENT_SECRET).toString("base64")}`,
-//                     "Content-Type": "application/x-www-form-urlencoded",
-//                 },
-//             }
-//         );
-
-//         const accessToken = authResponse.data.access_token;
-
-//         // Search for Song
-//         const url = `https://api.spotify.com/v1/search?q=${query}&type=track&limit=5`;
-//         const { data } = await axios.get(url, {
-//             headers: { Authorization: `Bearer ${accessToken}` },
-//         });
-
-//         res.json(data.tracks.items.map(track => ({
-//             source: "Spotify",
-//             title: track.name,
-//             artist: track.artists[0].name,
-//             url: track.external_urls.spotify,
-//         })));
-//     } catch (error) {
-//         res.status(500).json({ error: "Spotify API error" });
-//     }
-// });
-
-// Combined Search API
-app.get("/search", async (req, res) => {
-    const query = req.query.q;
-    logs.push(`Got a request for query ${query}`);
-    try {
-        const y = await yt(query);
-        if (y?.error) {
-            res.status(400).json(y);
-        }
-
-        logs.push('sent the response back to server');
-        res.json([y]);
-    } catch (error) {
-        res.status(500).json({ error: "Error fetching songs", errorCode: JSON.stringify(error) });
-    }
-});
-
-const PORT = process.env.PORT || 5000;  // Render sets PORT dynamically
+const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, "0.0.0.0", () => {
     console.log(`🎶 Server running on port ${PORT}`);
