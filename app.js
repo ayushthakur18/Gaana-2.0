@@ -48,8 +48,7 @@ app.get('/logs', async (req, res) => {
 })
 
 // 1️⃣ YouTube Search & Audio Extraction
-const yt = async (req, res) => {
-    const query = req.query.q;
+const yt = async (query) => {
     logs.push(`${query} came in yt channel`);
     const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${query}&key=${YT_API_KEY}&maxResults=1`;
 
@@ -57,7 +56,7 @@ const yt = async (req, res) => {
         const { data } = await axios.get(url);
         if (!data.items.length) {
             logs.push('Couldnt get yt data');
-            return res.status(404).json({ error: "No results found" });
+            return { error: "No results found" };
         }
 
         const videoId = data.items[0].id.videoId;
@@ -69,7 +68,7 @@ const yt = async (req, res) => {
         // If audio already exists, return it
         if (fs.existsSync(audioFile)) {
             logs.push('Got the audio file from cache');
-            return res.json({ source: "YouTube", title, audioUrl: `https://my-music-tf55.onrender.com/audio/${videoId}.mp3` });
+            return { source: "YouTube", title, audioUrl: `https://my-music-tf55.onrender.com/audio/${videoId}.mp3` };
         }
 
         logs.push('Converting video to audio');
@@ -78,15 +77,15 @@ const yt = async (req, res) => {
             const command = `yt-dlp -x --audio-format mp3 "${videoUrl}" -o "${AUDIO_DIR}/%(id)s.%(ext)s"`;
             await runCommand(command);
             logs.push(`Well something happened successully ${`https://my-music-tf55.onrender.com/audio/${videoId}.mp3`}`);
-            res.json({ source: "YouTube", title, audioUrl: `https://my-music-tf55.onrender.com/audio/${videoId}.mp3` });
-        }catch (e) {
+            return { source: "YouTube", title, audioUrl: `https://my-music-tf55.onrender.com/audio/${videoId}.mp3` };
+        } catch (e) {
             logs.push('Problems occured at the time of conversion');
             logs.push(JSON.stringify(e));
         }
 
     } catch (error) {
         logs.push(`Well something occured at the top error handler of yt ${JSON.stringify(error)}`);
-        res.status(500).json({ error: "YouTube API error", details: error.toString() });
+        return { error: "YouTube API error", details: error.toString() };
     }
 };
 
@@ -153,8 +152,12 @@ app.get("/search", async (req, res) => {
     logs.push(`Got a request for query ${query}`);
     try {
         const y = await yt(req, res);
+        if (y?.error) {
+            res.status(400).json(y);
+        }
+
         logs.push('sent the response back to server');
-        res.json([y.data]);
+        res.json([y]);
     } catch (error) {
         res.status(500).json({ error: "Error fetching songs", errorCode: JSON.stringify(error) });
     }
