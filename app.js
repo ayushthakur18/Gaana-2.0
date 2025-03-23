@@ -22,16 +22,16 @@ app.use((req, res, next) => {
 });
 
 const YT_API_KEY = process.env.YT_API_KEY;
-const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
-const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
-const JAMENDO_CLIENT_ID = process.env.JAMENDO_CLIENT_ID;
+// const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
+// const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
+// const JAMENDO_CLIENT_ID = process.env.JAMENDO_CLIENT_ID;
 
 // Ensure "audio" directory exists
 const AUDIO_DIR = path.join(__dirname, "audio");
 if (!fs.existsSync(AUDIO_DIR)) fs.mkdirSync(AUDIO_DIR);
 
-const YT_DLP_PATH = path.join(__dirname, "yt-dlp");
-const FFMPEG_PATH = path.join(__dirname, "ffmpeg", "ffmpeg");
+// const YT_DLP_PATH = path.join(__dirname, "yt-dlp");
+// const FFMPEG_PATH = path.join(__dirname, "ffmpeg", "ffmpeg");
 
 // Define the command
 
@@ -80,7 +80,8 @@ const yt = async (query) => {
         // Extract audio using yt-dlp
         try {
             // const command = `yt-dlp -x --audio-format mp3 "${videoUrl}" -o "${AUDIO_DIR}/%(id)s.%(ext)s"`;
-            const command = `${YT_DLP_PATH} -x --audio-format mp3 --ffmpeg-location ${FFMPEG_PATH} "${videoUrl}" -o "${AUDIO_DIR}/%(id)s.%(ext)s"`;
+            // const command = `${YT_DLP_PATH} -x --audio-format mp3 --ffmpeg-location ${FFMPEG_PATH} "${videoUrl}" -o "${AUDIO_DIR}/%(id)s.%(ext)s"`;
+            const command = `yt-dlp -x --audio-format mp3 "${videoUrl}" -o "${AUDIO_DIR}/%(id)s.%(ext)s"`;
             await runCommand(command);
             logs.push(`Well something happened successully ${`https://my-music-tf55.onrender.com/audio/${videoId}.mp3`}`);
             return { source: "YouTube", title, audioUrl: `https://my-music-tf55.onrender.com/audio/${videoId}.mp3` };
