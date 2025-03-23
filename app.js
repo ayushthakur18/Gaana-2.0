@@ -152,9 +152,9 @@ app.get("/search", async (req, res) => {
     const query = req.query.q;
     logs.push(`Got a request for query ${query}`);
     try {
-        const yt = await yt(req, res);
+        const y = await yt(req, res);
         logs.push('sent the response back to server');
-        res.json([yt.data]);
+        res.json([y.data]);
     } catch (error) {
         res.status(500).json({ error: "Error fetching songs", errorCode: JSON.stringify(error) });
     }
