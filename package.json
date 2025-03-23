@@ -6,7 +6,6 @@
     "express": "^4.21.2"
   },
   "scripts": {
-  "preinstall": "./render-build.sh",
   "start": "node app.js"
   }
 }
