@@ -24,5 +24,8 @@ ffmpeg -version
 echo "yt-dlp version:"
 yt-dlp --version
 
+echo "export PATH=$PWD/ffmpeg:\$PATH" >> ~/.bashrc
+source ~/.bashrc
+
 # Start the application
 node app.js
