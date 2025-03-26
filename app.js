@@ -94,13 +94,14 @@ app.get("/search", async (req, res) => {
     try {
         const y = await yt(query);
         if (y?.error) {
-            res.status(400).json(y);
+            res.json(y);
         }
 
         logs.push(`sent the response back to server ${JSON.stringify([y])}`);
         res.json([y]);
     } catch (error) {
-        res.json({ error: "Error fetching songs", errorCode: JSON.stringify(error) });
+        logs.push(`Error occured at the top error handler of search ${JSON.stringify(error)}`);
+        throw new Error({ error: "Error fetching songs", errorCode: JSON.stringify(error) });
     }
 });
 
