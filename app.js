@@ -100,7 +100,7 @@ app.get("/search", async (req, res) => {
         logs.push(`sent the response back to server ${JSON.stringify([y])}`);
         res.json([y]);
     } catch (error) {
-        res.status(500).json({ error: "Error fetching songs", errorCode: JSON.stringify(error) });
+        res.json({ error: "Error fetching songs", errorCode: JSON.stringify(error) });
     }
 });
 
