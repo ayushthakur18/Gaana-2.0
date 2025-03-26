@@ -39,27 +39,12 @@ const runCommand = (command) => {
 };
 
 app.get('/logs', async (req, res) => {
+    logs.push('---------------------------------------')
     res.send(logs);
-    logs = [];
 });
 
 app.use("/audio", express.static(AUDIO_DIR));
 
-app.get("/search", async (req, res) => {
-    const query = req.query.q;
-    logs.push(`Got a request for query ${query}`);
-    try {
-        const y = await yt(query);
-        if (y?.error) {
-            res.status(400).json(y);
-        }
-
-        logs.push('sent the response back to server');
-        res.json([y]);
-    } catch (error) {
-        res.status(500).json({ error: "Error fetching songs", errorCode: JSON.stringify(error) });
-    }
-});
 const yt = async (query) => {
     logs.push(`${query} came in yt channel`);
     const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${query}&key=${YT_API_KEY}&maxResults=1`;
@@ -102,6 +87,22 @@ const yt = async (query) => {
         return { error: "YouTube API error", details: error.toString() };
     }
 };
+
+app.get("/search", async (req, res) => {
+    const query = req.query.q;
+    logs.push(`Got a request for query ${query}`);
+    try {
+        const y = await yt(query);
+        if (y?.error) {
+            res.status(400).json(y);
+        }
+
+        logs.push(`sent the response back to server ${JSON.stringify([y])}`);
+        res.json([y]);
+    } catch (error) {
+        res.status(500).json({ error: "Error fetching songs", errorCode: JSON.stringify(error) });
+    }
+});
 
 const PORT = process.env.PORT || 5000;
 
