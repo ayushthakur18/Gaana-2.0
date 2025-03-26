@@ -40,7 +40,7 @@ const runCommand = (command) => {
 
 app.get('/logs', async (req, res) => {
     logs.push('---------------------------------------')
-    res.send(logs);
+    res.json(logs);
 });
 
 app.use("/audio", express.static(AUDIO_DIR));
