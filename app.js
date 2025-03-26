@@ -39,8 +39,7 @@ const runCommand = (command) => {
 };
 
 app.get('/logs', async (req, res) => {
-    logs.push('---------------------------------------')
-    res.json(logs);
+    res.sned(logs);
 });
 
 app.use("/audio", express.static(AUDIO_DIR));
