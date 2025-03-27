@@ -3,8 +3,9 @@ const axios = require("axios");
 const cors = require("cors");
 const path = require('path');
 const fs = require('fs')
-const { exec } = require("child_process");
 require("dotenv").config();
+const ytdl = require("ytdl-core");
+const ffmpeg = require("fluent-ffmpeg");
 
 const app = express();
 
@@ -22,21 +23,11 @@ app.use((req, res, next) => {
 });
 
 const YT_API_KEY = process.env.YT_API_KEY;
-const YT_DLP_PATH = "/opt/render/project/.cache/bin/yt-dlp";
 
 const AUDIO_DIR = path.join(__dirname, "audio");
 if (!fs.existsSync(AUDIO_DIR)) fs.mkdirSync(AUDIO_DIR);
 
 let logs = [];
-
-const runCommand = (command) => {
-    return new Promise((resolve, reject) => {
-        exec(command, (error, stdout, stderr) => {
-            if (error) reject(stderr || error);
-            else resolve(stdout);
-        });
-    });
-};
 
 app.get('/logs', async (req, res) => {
     res.send(logs);
@@ -68,11 +59,15 @@ const yt = async (query) => {
         }
 
         logs.push('Converting video to audio');
-        // Extract audio using yt-dlp
         try {
-            // const command = `yt-dlp -x --audio-format mp3 "${videoUrl}" -o "${AUDIO_DIR}/%(id)s.%(ext)s"`;
-            const command = `${YT_DLP_PATH} -x --audio-format mp3 "${videoUrl}" -o "${AUDIO_DIR}/%(id)s.%(ext)s"`;
-            await runCommand(command);
+            const stream = ytdl(videoUrl, { quality: "highestaudio" });
+
+            ffmpeg(stream)
+                .audioCodec("libmp3lame")
+                .toFormat("mp3")
+                .save(audioFile)
+                .on("end", () => logs.push("Conversion complete!"));
+
             logs.push(`Well something happened successully ${`https://my-music-tf55.onrender.com/audio/${videoId}.mp3`}`);
             return { source: "YouTube", title, audioUrl: `https://my-music-tf55.onrender.com/audio/${videoId}.mp3` };
         } catch (e) {
@@ -100,7 +95,6 @@ app.get("/search", async (req, res) => {
         res.json([y]);
     } catch (error) {
         logs.push(`Error occured at the top error handler of search ${JSON.stringify(error)}`);
-        throw new Error({ error: "Error fetching songs", errorCode: JSON.stringify(error) });
     }
 });
 
